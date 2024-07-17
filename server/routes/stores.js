@@ -32,6 +32,23 @@ router.get('/stores/:id', async (ctx) => {
   }
 });
 
+// GET image by store ID
+router.get('/stores/:id/image', async (ctx) => {
+  try {
+    const store = await Store.findById(ctx.params.id);
+    if (!store || !store.image || !store.image.data) {
+      ctx.status = 404;
+      ctx.body = { message: 'Image not found' };
+      return;
+    }
+    ctx.set('Content-Type', store.image.contentType);
+    ctx.body = store.image.data;
+  } catch (err) {
+    ctx.status = 500;
+    ctx.body = { message: err.message };
+  }
+});
+
 // POST a new store
 router.post('/stores', upload.single('image'), async (ctx) => {
   const { name, code } = ctx.request.body;
