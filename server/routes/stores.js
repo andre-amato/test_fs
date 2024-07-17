@@ -1,7 +1,9 @@
 const Router = require('koa-router');
+const multer = require('@koa/multer'); // To upload images
 const Store = require('../models/store'); // Adjust the path to your model file
 
 const router = new Router();
+const upload = multer();
 
 // GET all stores
 router.get('/stores', async (ctx) => {
@@ -31,8 +33,8 @@ router.get('/stores/:id', async (ctx) => {
 });
 
 // POST a new store
-router.post('/stores', async (ctx) => {
-  const { name, code, image } = ctx.request.body;
+router.post('/stores', upload.single('image'), async (ctx) => {
+  const { name, code } = ctx.request.body;
   if (!name || !code) {
     ctx.status = 400;
     ctx.body = { message: 'Name and code are required' };
@@ -40,14 +42,14 @@ router.post('/stores', async (ctx) => {
   }
 
   let newStore;
-  if (image && image.data && image.contentType && image.size) {
+  if (ctx.file) {
     newStore = new Store({
       name,
       code,
       image: {
-        data: Buffer.from(image.data, 'base64'),
-        contentType: image.contentType,
-        size: image.size,
+        data: ctx.file.buffer,
+        contentType: ctx.file.mimetype,
+        size: ctx.file.size,
       },
     });
   } else {
